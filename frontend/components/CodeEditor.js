@@ -43,29 +43,43 @@ int main() {
   };
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden">
-      <div className="bg-gray-100 px-4 py-2 flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <label className="text-sm font-medium text-gray-700">Language:</label>
-          <select
-            value={selectedLanguage}
-            onChange={(e) => handleLanguageChange(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
-          >
-            <option value="java">Java</option>
-            <option value="python">Python</option>
-            <option value="cpp">C++</option>
-          </select>
+    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-lg">
+      <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-semibold text-gray-700">Language:</label>
+            <select
+              value={selectedLanguage}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="java">☕ Java</option>
+              <option value="python">🐍 Python</option>
+              <option value="cpp">⚡ C++</option>
+            </select>
+          </div>
         </div>
         <button
           onClick={() => onSubmit(selectedLanguage)}
           disabled={isSubmitting}
-          className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-4 py-2 rounded text-sm font-medium"
+          className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit'}
+          {isSubmitting ? (
+            <div className="flex items-center">
+              <div className="spinner mr-2" style={{ width: '16px', height: '16px' }}></div>
+              Submitting...
+            </div>
+          ) : (
+            '🚀 Submit'
+          )}
         </button>
       </div>
-      <div className="h-96">
+      <div className="h-96 bg-white">
         <Editor
           height="100%"
           language={selectedLanguage}
@@ -79,6 +93,26 @@ int main() {
             roundedSelection: false,
             scrollBeyondLastLine: false,
             automaticLayout: true,
+            fontFamily: "'Fira Code', 'Consolas', 'Monaco', monospace",
+            fontWeight: '400',
+            cursorStyle: 'line',
+            cursorBlinking: 'blink',
+            renderLineHighlight: 'gutter',
+            selectOnLineNumbers: true,
+            wordWrap: 'on',
+            wrappingIndent: 'indent',
+            smoothScrolling: true,
+            mouseWheelZoom: true,
+            contextmenu: true,
+            folding: true,
+            foldingStrategy: 'indentation',
+            showFoldingControls: 'always',
+            unfoldOnClickAfterEnd: false,
+            bracketPairColorization: { enabled: true },
+            guides: {
+              bracketPairs: true,
+              indentation: true,
+            },
           }}
         />
       </div>

@@ -102,49 +102,99 @@ export default function Contest() {
 
   if (!contest) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen gradient-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading contest...</p>
+          <div className="spinner mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading contest...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{contest.title}</h1>
-          <p className="mt-2 text-gray-600">Welcome, {user}!</p>
-          {submissionStatus && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-blue-800">Status: {submissionStatus}</p>
+    <div className="min-h-screen gradient-bg">
+      {/* Navigation */}
+      <nav className="bg-white/10 backdrop-blur-sm border-b border-white/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">S</span>
+              </div>
+              <span className="text-white font-bold text-xl">Shodh-a-Code</span>
             </div>
-          )}
+            <div className="flex items-center space-x-4">
+              <span className="text-white/80">Welcome, <span className="font-semibold text-white">{user}</span></span>
+              <button
+                onClick={() => router.push('/')}
+                className="btn-secondary text-sm"
+              >
+                ← Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Contest Header */}
+        <div className="mb-8 animate-fadeInUp">
+          <div className="glass-card rounded-2xl p-8">
+            <h1 className="text-4xl font-bold text-white mb-2">{contest.title}</h1>
+            <p className="text-white/80 text-lg">{contest.description}</p>
+            {submissionStatus && (
+              <div className={`mt-4 p-4 rounded-lg border ${
+                submissionStatus === 'ACCEPTED' ? 'status-accepted' :
+                submissionStatus === 'WRONG_ANSWER' ? 'status-wrong-answer' :
+                submissionStatus === 'PENDING' || submissionStatus === 'RUNNING' ? 'status-pending' :
+                'status-running'
+              }`}>
+                <div className="flex items-center">
+                  {submissionStatus === 'ACCEPTED' && <span className="text-green-600 mr-2">✅</span>}
+                  {submissionStatus === 'WRONG_ANSWER' && <span className="text-red-600 mr-2">❌</span>}
+                  {(submissionStatus === 'PENDING' || submissionStatus === 'RUNNING') && <span className="text-yellow-600 mr-2">⏳</span>}
+                  <span className="font-semibold">Status: {submissionStatus}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
           {/* Left Column - Problems and Code Editor */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="xl:col-span-3 space-y-6">
             {/* Problem Selection */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Problems</h2>
-              <div className="space-y-2">
-                {contest.problems.map((problem) => (
-                  <button
-                    key={problem.id}
-                    onClick={() => setSelectedProblem(problem)}
-                    className={`w-full text-left p-3 rounded-lg border ${
-                      selectedProblem?.id === problem.id
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <h3 className="font-medium text-gray-900">{problem.title}</h3>
-                  </button>
-                ))}
+            <div className="card animate-fadeInUp">
+              <div className="p-6 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-gray-800">Problems</h2>
+                <p className="text-gray-600 mt-1">Select a problem to start coding</p>
+              </div>
+              <div className="p-6">
+                <div className="grid gap-3">
+                  {contest.problems.map((problem, index) => (
+                    <button
+                      key={problem.id}
+                      onClick={() => setSelectedProblem(problem)}
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                        selectedProblem?.id === problem.id
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-gray-800">{problem.title}</h3>
+                          <p className="text-sm text-gray-600 mt-1">Problem {index + 1}</p>
+                        </div>
+                        {selectedProblem?.id === problem.id && (
+                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-sm">✓</span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -152,20 +202,25 @@ export default function Contest() {
             <ProblemView problem={selectedProblem} />
 
             {/* Code Editor */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Code Editor</h2>
-              <CodeEditor
-                value={code}
-                onChange={setCode}
-                language="java"
-                onSubmit={handleSubmit}
-                isSubmitting={isSubmitting}
-              />
+            <div className="card animate-fadeInUp">
+              <div className="p-6 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-gray-800">Code Editor</h2>
+                <p className="text-gray-600 mt-1">Write your solution and submit</p>
+              </div>
+              <div className="p-6">
+                <CodeEditor
+                  value={code}
+                  onChange={setCode}
+                  language="java"
+                  onSubmit={handleSubmit}
+                  isSubmitting={isSubmitting}
+                />
+              </div>
             </div>
           </div>
 
           {/* Right Column - Leaderboard */}
-          <div className="lg:col-span-1">
+          <div className="xl:col-span-1">
             <Leaderboard contestId={contestId} />
           </div>
         </div>
