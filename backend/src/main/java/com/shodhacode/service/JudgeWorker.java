@@ -72,7 +72,7 @@ public class JudgeWorker {
                 Files.write(codeFile, submission.getCode().getBytes());
                 
                 // Fetch problem with test cases to avoid lazy initialization
-                Problem problem = problemRepository.findById(submission.getProblem().getId())
+                Problem problem = problemRepository.findByIdWithTestCases(submission.getProblem().getId())
                         .orElseThrow(() -> new RuntimeException("Problem not found"));
                 List<TestCase> testCases = problem.getTestCases();
                 boolean allPassed = true;
