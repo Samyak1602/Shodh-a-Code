@@ -3,10 +3,13 @@ package com.shodhacode.service;
 import com.shodhacode.model.Submission;
 import com.shodhacode.model.SubmissionStatus;
 import com.shodhacode.model.TestCase;
+import com.shodhacode.model.Problem;
 import com.shodhacode.repository.SubmissionRepository;
+import com.shodhacode.repository.ProblemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PostConstruct;
 import java.io.*;
@@ -25,6 +28,7 @@ public class JudgeWorker {
     
     private final SubmissionService submissionService;
     private final SubmissionRepository submissionRepository;
+    private final ProblemRepository problemRepository;
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
     
     @PostConstruct
@@ -51,6 +55,7 @@ public class JudgeWorker {
         }
     }
     
+    @Transactional
     private void processSubmission(Submission submission) {
         try {
             // Set status to RUNNING
@@ -66,8 +71,10 @@ public class JudgeWorker {
                 Path codeFile = tempDir.resolve(fileName);
                 Files.write(codeFile, submission.getCode().getBytes());
                 
-                // Process each test case
-                List<TestCase> testCases = submission.getProblem().getTestCases();
+                // Fetch problem with test cases to avoid lazy initialization
+                Problem problem = problemRepository.findById(submission.getProblem().getId())
+                        .orElseThrow(() -> new RuntimeException("Problem not found"));
+                List<TestCase> testCases = problem.getTestCases();
                 boolean allPassed = true;
                 String result = "";
                 
@@ -133,8 +140,8 @@ public class JudgeWorker {
             Path inputFile = workDir.resolve("input.txt");
             Files.write(inputFile, testCase.getInput().getBytes());
             
-            // Build Docker command
-            List<String> command = buildDockerCommand(workDir, fileName, language);
+            // Build execution command
+            List<String> command = buildExecutionCommand(fileName, language);
             
             // Execute command
             ProcessBuilder pb = new ProcessBuilder(command);
@@ -142,8 +149,14 @@ public class JudgeWorker {
             
             Process process = pb.start();
             
+            // Write input to process
+            try (OutputStreamWriter writer = new OutputStreamWriter(process.getOutputStream())) {
+                writer.write(testCase.getInput());
+                writer.flush();
+            }
+            
             // Wait for completion with timeout
-            boolean finished = process.waitFor(5, java.util.concurrent.TimeUnit.SECONDS);
+            boolean finished = process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
             
             if (!finished) {
                 process.destroyForcibly();
@@ -167,30 +180,15 @@ public class JudgeWorker {
         }
     }
     
-    private List<String> buildDockerCommand(Path workDir, String fileName, String language) {
-        String mountPath = workDir.toString();
-        
-        return List.of(
-            "docker", "run", "--rm",
-            "--network", "none",
-            "--memory=256m",
-            "--cpus=0.5",
-            "--pids-limit=64",
-            "-v", mountPath + ":/workspace:rw",
-            "-w", "/workspace",
-            "judge-image:latest",
-            "/bin/sh", "-c", getExecutionCommand(fileName, language)
-        );
-    }
-    
-    private String getExecutionCommand(String fileName, String language) {
+    private List<String> buildExecutionCommand(String fileName, String language) {
         return switch (language.toLowerCase()) {
-            case "java" -> "javac " + fileName + " && timeout 2 java Main < input.txt";
-            case "python" -> "timeout 2 python " + fileName + " < input.txt";
-            case "cpp", "c++" -> "g++ " + fileName + " -o main && timeout 2 ./main < input.txt";
-            default -> "javac " + fileName + " && timeout 2 java Main < input.txt";
+            case "java" -> List.of("bash", "-c", "javac " + fileName + " && java Main");
+            case "python" -> List.of("python3", fileName);
+            case "cpp", "c++" -> List.of("bash", "-c", "g++ " + fileName + " -o main && ./main");
+            default -> List.of("bash", "-c", "javac " + fileName + " && java Main");
         };
     }
+    
     
     private String readStream(InputStream stream) throws IOException {
         StringBuilder output = new StringBuilder();

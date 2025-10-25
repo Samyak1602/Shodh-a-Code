@@ -65,6 +65,11 @@ public class DataInitializationService {
         problemRepository.save(problem1);
         problemRepository.save(problem2);
         
+        // Add problems to contest's problems collection
+        savedContest.getProblems().add(problem1);
+        savedContest.getProblems().add(problem2);
+        contestRepository.save(savedContest);
+        
         log.info("Created {} problems for contest", 2);
         log.info("Data initialization completed");
     }

@@ -3,14 +3,17 @@ package com.shodhacode.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "contests")
 @Data
+@EqualsAndHashCode(exclude = {"problems"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Contest {
@@ -31,6 +34,6 @@ public class Contest {
     @Column(nullable = false)
     private LocalDateTime endTime;
     
-    @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Problem> problems;
+    @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<Problem> problems = new HashSet<>();
 }
